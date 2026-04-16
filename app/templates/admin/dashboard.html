@@ -1,8 +1,33 @@
 {% extends 'base.html' %}
-
-{% block title %}後台總覽 - 食譜收藏夾{% endblock %}
+{% block title %}管理員後台 - 食譜收藏夾{% endblock %}
 
 {% block content %}
-<h2>管理員後台：總覽</h2>
-<!-- 待實作平台總覽數據面板 -->
+<div class="mb-5 d-flex align-items-center">
+    <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 50px; height: 50px;">
+        <i class="fa-solid fa-shield-halved fs-4"></i>
+    </div>
+    <h2 class="fw-bold mb-0">管理員後台</h2>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-6">
+        <a href="{{ url_for('admin.manage_users') }}" class="text-decoration-none">
+            <div class="glass-card p-5 text-center shadow-hover h-100 border-primary border-opacity-25">
+                <i class="fa-solid fa-users text-primary display-4 mb-3"></i>
+                <h3 class="text-dark fw-bold mb-2">會員管理</h3>
+                <p class="text-muted fs-5 mb-0">總計 <span class="fw-bold text-primary">{{ users_count }}</span> 位會員</p>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-6">
+        <a href="{{ url_for('admin.manage_recipes') }}" class="text-decoration-none">
+            <div class="glass-card p-5 text-center shadow-hover h-100 border-success border-opacity-25">
+                <i class="fa-solid fa-utensils text-success display-4 mb-3"></i>
+                <h3 class="text-dark fw-bold mb-2">食譜管理</h3>
+                <p class="text-muted fs-5 mb-0">總計 <span class="fw-bold text-success">{{ recipes_count }}</span> 篇食譜</p>
+            </div>
+        </a>
+    </div>
+</div>
 {% endblock %}

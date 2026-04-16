@@ -1,8 +1,95 @@
 {% extends 'base.html' %}
-
-{% block title %}編輯食譜 - 食譜收藏夾{% endblock %}
-
+{% block title %}編輯：{{ recipe.title }} - 食譜收藏夾{% endblock %}
 {% block content %}
-<h2>編輯食譜</h2>
-<!-- 待實作編輯食譜表單區 (需帶入原資料) -->
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="glass-form animate-fade-in mb-5">
+            <div class="text-center mb-4 border-bottom pb-4">
+                <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px;">
+                    <i class="fa-solid fa-pen-to-square fs-1"></i>
+                </div>
+                <h2 class="text-dark fw-bold">編輯食譜</h2>
+                <p class="text-muted">更新您的美味配方</p>
+            </div>
+            
+            <form action="{{ url_for('recipes.update', id=recipe.id) }}" method="POST" enctype="multipart/form-data">
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <label class="form-label text-secondary fw-semibold ms-1">食譜名稱 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-lg bg-light border-0 shadow-sm" name="title" value="{{ recipe.title }}" required>
+                    </div>
+                    <div class="col-md-4 mt-4 mt-md-0">
+                        <label class="form-label text-secondary fw-semibold ms-1">料理分類</label>
+                        <select class="form-select form-select-lg bg-light border-0 shadow-sm" name="category">
+                            <option value="主餐" {% if recipe.category == '主餐' %}selected{% endif %}>主餐</option>
+                            <option value="湯品" {% if recipe.category == '湯品' %}selected{% endif %}>湯品</option>
+                            <option value="甜點" {% if recipe.category == '甜點' %}selected{% endif %}>甜點</option>
+                            <option value="點心" {% if recipe.category == '點心' %}selected{% endif %}>點心</option>
+                            <option value="飲品" {% if recipe.category == '飲品' %}selected{% endif %}>飲品</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label text-secondary fw-semibold ms-1">食譜簡介</label>
+                    <textarea class="form-control bg-light border-0 shadow-sm" name="description" rows="2">{{ recipe.description }}</textarea>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary fw-semibold ms-1">料理時間 (分鐘)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0 shadow-sm text-muted"><i class="fa-solid fa-clock"></i></span>
+                            <input type="number" class="form-control bg-light border-0 shadow-sm" name="prep_time" value="{{ recipe.prep_time }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6 mt-4 mt-md-0">
+                        <label class="form-label text-secondary fw-semibold ms-1">困難度</label>
+                        <select class="form-select bg-light border-0 shadow-sm" name="difficulty">
+                            <option value="簡單" {% if recipe.difficulty == '簡單' %}selected{% endif %}>簡單</option>
+                            <option value="中等" {% if recipe.difficulty == '中等' %}selected{% endif %}>中等</option>
+                            <option value="困難" {% if recipe.difficulty == '困難' %}selected{% endif %}>困難</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label text-secondary fw-semibold ms-1">所需食材 <span class="text-muted fw-normal fs-6">(請以半形 , 逗號分隔)</span></label>
+                    <input type="text" class="form-control form-control-lg bg-light border-0 shadow-sm" name="ingredients" value="{{ recipe.ingredients|join(', ', attribute='name') }}">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label text-secondary fw-semibold ms-1">詳細烹調步驟 <span class="text-danger">*</span></label>
+                    <textarea class="form-control bg-light border-0 shadow-sm" name="steps" rows="6" required>{{ recipe.steps }}</textarea>
+                </div>
+                
+                <div class="mb-4 p-4 border border-2 border-dashed rounded-4 bg-light text-center">
+                    {% if recipe.image_filename %}
+                        <div class="mb-3">
+                            <p class="text-muted mb-2">目前的圖片：</p>
+                            <img src="{{ url_for('static', filename='uploads/' + recipe.image_filename) }}" alt="Current Image" style="height: 100px; border-radius: 8px;">
+                        </div>
+                    {% else %}
+                        <i class="fa-solid fa-cloud-arrow-up fs-2 text-muted mb-2"></i>
+                    {% endif %}
+                    <h6 class="fw-bold text-secondary">上傳新封面圖片 (若不更改請留空)</h6>
+                    <input type="file" class="form-control shadow-sm mt-3" name="image" accept="image/*">
+                </div>
+                
+                <div class="form-check form-switch mb-5 bg-white p-3 rounded-3 shadow-sm border">
+                    <input class="form-check-input ms-0 me-3" style="width: 2.5em; height: 1.5em; cursor: pointer;" type="checkbox" id="is_public" name="is_public" {% if recipe.is_public %}checked{% endif %}>
+                    <label class="form-check-label fw-bold d-flex flex-column ms-2" for="is_public" style="cursor: pointer;">
+                        <span>公開分享此食譜</span>
+                        <span class="text-muted fw-normal fs-6">關閉則只有您可以看得到這份食譜。</span>
+                    </label>
+                </div>
+                
+                <div class="d-flex justify-content-end gap-3 pt-3 border-top">
+                    <a href="{{ url_for('recipes.detail', id=recipe.id) }}" class="btn btn-secondary btn-lg bg-opacity-25 text-secondary border-0 fw-bold px-4 hover-shadow">取消</a>
+                    <button type="submit" class="btn btn-primary-custom btn-lg fw-bold px-5 bg-warning text-dark"><i class="fa-solid fa-check me-2"></i>儲存變更</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

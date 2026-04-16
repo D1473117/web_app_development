@@ -1,8 +1,142 @@
 {% extends 'base.html' %}
-
-{% block title %}食譜詳情 - 食譜收藏夾{% endblock %}
-
+{% block title %}{{ recipe.title }} - 食譜收藏夾{% endblock %}
 {% block content %}
-<h2>食譜詳情</h2>
-<!-- 待實作單筆食譜內容展示及留言區 -->
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="glass-card mb-5 overflow-hidden">
+            {% if recipe.image_filename %}
+            <img src="{{ url_for('static', filename='uploads/' + recipe.image_filename) }}" class="img-fluid w-100 shadow-sm" style="max-height: 400px; object-fit: cover;" alt="{{ recipe.title }}">
+            {% endif %}
+            <div class="p-4 p-md-5">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill fs-6">{{ recipe.category }}</span>
+                    {% if current_user.is_authenticated %}
+                        <button class="btn btn-outline-danger rounded-circle shadow-sm p-0 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;" id="fav-btn" data-id="{{ recipe.id }}">
+                            <i class="fa-heart fs-4 {% for fav in recipe.favorites %}{% if fav.user_id == current_user.id %}fa-solid{% endif %}{% endfor %} {% if current_user.id not in recipe.favorites|map(attribute='user_id') %}fa-regular{% endif %}"></i>
+                        </button>
+                    {% endif %}
+                </div>
+                
+                <h1 class="display-5 fw-bold text-dark mb-3">{{ recipe.title }}</h1>
+                <p class="text-muted lead">{{ recipe.description }}</p>
+                
+                <div class="d-flex flex-wrap gap-4 mb-4 pb-4 border-bottom">
+                    <div class="text-center bg-light rounded-4 p-3 flex-grow-1 shadow-sm">
+                        <i class="fa-solid fa-clock text-warning fs-3 mb-2"></i><br>
+                        <span class="fw-bold text-secondary">{{ recipe.prep_time }} 分鐘</span>
+                    </div>
+                    <div class="text-center bg-light rounded-4 p-3 flex-grow-1 shadow-sm">
+                        <i class="fa-solid fa-dumbbell text-success fs-3 mb-2"></i><br>
+                        <span class="fw-bold text-secondary">{{ recipe.difficulty }}</span>
+                    </div>
+                    <div class="text-center bg-light rounded-4 p-3 flex-grow-1 shadow-sm">
+                        <i class="fa-solid fa-user text-info fs-3 mb-2"></i><br>
+                        <span class="fw-bold text-secondary">{{ recipe.author.email.split('@')[0] }}</span>
+                    </div>
+                </div>
+                
+                <h4 class="fw-bold mb-3 text-primary"><i class="fa-solid fa-basket-shopping me-2"></i>所需食材</h4>
+                <div class="mb-5 d-flex flex-wrap gap-2 p-4 bg-light rounded-4 shadow-inner">
+                    {% for ingredient in recipe.ingredients %}
+                        <span class="ingredient-badge shadow-sm"><i class="fa-solid fa-leaf me-1 text-success"></i>{{ ingredient.name }}</span>
+                    {% else %}
+                        <span class="text-muted">未提供食材。</span>
+                    {% endfor %}
+                </div>
+                
+                <h4 class="fw-bold mb-3 text-primary"><i class="fa-solid fa-list-ol me-2"></i>烹調步驟</h4>
+                <div class="bg-white p-4 p-md-5 rounded-4 shadow-sm mb-4 border" style="white-space: pre-line; line-height: 2; font-size: 1.1rem; color: #4b5563;">
+                    {{ recipe.steps }}
+                </div>
+                
+                {% if current_user.is_authenticated and (current_user.id == recipe.user_id or current_user.is_admin) %}
+                <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
+                    <a href="{{ url_for('recipes.edit', id=recipe.id) }}" class="btn btn-warning shadow-sm fw-bold px-4"><i class="fa-solid fa-edit me-2"></i>編輯</a>
+                    <form action="{{ url_for('recipes.delete', id=recipe.id) }}" method="POST" onsubmit="return confirm('確定要永久刪除這份食譜嗎？');">
+                        <button type="submit" class="btn btn-danger shadow-sm fw-bold px-4"><i class="fa-solid fa-trash me-2"></i>刪除</button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- 留言區 -->
+        <h4 class="fw-bold mb-4"><i class="fa-solid fa-comments me-2 text-primary"></i>食譜迴響 ({{ recipe.comments|length }})</h4>
+        {% if current_user.is_authenticated %}
+        <div class="glass-card p-4 mb-5 border-primary border-opacity-25">
+            <h5 class="fw-bold mb-3 text-secondary">新增您的留言</h5>
+            <form action="{{ url_for('comments.create_comment', recipe_id=recipe.id) }}" method="POST">
+                <div class="mb-3">
+                    <label class="form-label text-muted fw-semibold">給予評分</label>
+                    <div class="d-flex align-items-center gap-3">
+                        <input type="range" class="form-range w-50" name="rating" min="1" max="5" value="5" id="ratingRange" oninput="document.getElementById('ratingVal').innerText = this.value">
+                        <span class="badge bg-warning text-dark fs-5 shadow-sm" id="ratingVal">5</span> <i class="fa-solid fa-star text-warning fs-5"></i>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <textarea name="content" rows="4" class="form-control bg-light border-0 shadow-sm" placeholder="分享您照著做之後的試吃心得！" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary-custom float-end px-4 py-2"><i class="fa-solid fa-paper-plane me-2"></i>送出留言</button>
+                <div class="clearfix"></div>
+            </form>
+        </div>
+        {% else %}
+            <div class="glass-card p-4 mb-5 text-center bg-light">
+                <i class="fa-solid fa-lock text-muted fs-1 mb-3"></i>
+                <h5 class="fw-bold">請先登入</h5>
+                <p class="text-muted">登入會員後即可參與討論並收藏這份食譜。</p>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-primary-custom px-4">前往登入</a>
+            </div>
+        {% endif %}
+        
+        <div class="d-flex flex-column gap-3 mb-5">
+            {% for comment in recipe.comments|reverse %}
+            <div class="glass-card p-4">
+                <div class="d-flex justify-content-between mb-3 align-items-center border-bottom pb-2">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <strong class="fs-5">{{ comment.user.email.split('@')[0] }}</strong>
+                    </div>
+                    <span class="text-warning fs-5">
+                        {% for i in range(comment.rating|default(0)) %}<i class="fa-solid fa-star"></i>{% endfor %}
+                    </span>
+                </div>
+                <p class="mb-1 text-dark fs-5" style="line-height: 1.6;">{{ comment.content }}</p>
+                <small class="text-muted">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const favBtn = document.getElementById('fav-btn');
+    if (favBtn) {
+        favBtn.addEventListener('click', async () => {
+            const recipeId = favBtn.dataset.id;
+            try {
+                const res = await fetch(`/favorites/toggle/${recipeId}`, { method: 'POST' });
+                if(res.ok) {
+                    const data = await res.json();
+                    const icon = favBtn.querySelector('i');
+                    if (data.action === 'added') {
+                        icon.classList.remove('fa-regular');
+                        icon.classList.add('fa-solid', 'text-danger');
+                    } else {
+                        icon.classList.remove('fa-solid', 'text-danger');
+                        icon.classList.add('fa-regular');
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to toggle favorite:', err);
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

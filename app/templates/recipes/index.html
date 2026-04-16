@@ -1,8 +1,53 @@
 {% extends 'base.html' %}
-
 {% block title %}首頁 - 食譜收藏夾{% endblock %}
 
 {% block content %}
-<h2>最新公開食譜</h2>
-<!-- 待實作食譜列表及搜尋框 -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3">
+    <div>
+        <h1 class="display-5 text-primary fw-bold mb-1">發掘美味料理</h1>
+        <p class="text-muted fs-5 mb-0">探索各種精選的食譜，或是分享您的獨家家傳口味。</p>
+    </div>
+    <a href="{{ url_for('search.search_ingredients') }}" class="btn btn-outline-secondary rounded-pill shadow-sm align-self-start align-self-md-auto py-2 px-4 shadow-hover">
+        <i class="fa-solid fa-carrot me-2"></i>用手邊食材尋找食譜
+    </a>
+</div>
+
+<div class="row g-4">
+    {% for recipe in recipes %}
+    <div class="col-md-6 col-lg-4">
+        <div class="glass-card h-100 d-flex flex-column">
+            {% if recipe.image_filename %}
+                <img src="{{ url_for('static', filename='uploads/' + recipe.image_filename) }}" class="recipe-img" alt="{{ recipe.title }}">
+            {% else %}
+                <div class="card-img-placeholder">
+                    <i class="fa-solid fa-bowl-food opacity-75"></i>
+                </div>
+            {% endif %}
+            <div class="p-4 d-flex flex-column flex-grow-1">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h3 class="h5 fw-bold mb-0 text-truncate pe-2" style="max-width: 75%;">{{ recipe.title }}</h3>
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill">{{ recipe.category }}</span>
+                </div>
+                <p class="text-muted small mb-3">作者: {{ recipe.author.email.split('@')[0] }} • {{ recipe.created_at.strftime('%Y-%m-%d') }}</p>
+                <p class="card-text text-secondary mb-4 flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                    {{ recipe.description or '此食譜沒有簡介。' }}
+                </p>
+                <div class="d-flex justify-content-between align-items-center mt-auto">
+                    <div class="text-warning fw-semibold fs-6 px-3 py-1 bg-warning bg-opacity-10 rounded-pill">
+                        <i class="fa-solid fa-clock me-1"></i> {{ recipe.prep_time }} 分鐘
+                    </div>
+                    <a href="{{ url_for('recipes.detail', id=recipe.id) }}" class="btn btn-sm btn-primary-custom px-3">查看</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5 glass-card">
+        <i class="fa-solid fa-kitchen-set text-muted display-1 mb-4 opacity-50"></i>
+        <h3 class="text-muted fw-bold">這裡還空空如也</h3>
+        <p class="lead text-muted mb-4">目前還沒有公開的食譜。成為第一位分享美味的人吧！</p>
+        <a href="{{ url_for('recipes.create') }}" class="btn btn-primary-custom btn-lg"><i class="fa-solid fa-plus me-2"></i>發布食譜</a>
+    </div>
+    {% endfor %}
+</div>
 {% endblock %}

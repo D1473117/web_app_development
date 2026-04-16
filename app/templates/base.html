@@ -4,34 +4,103 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}食譜收藏夾{% endblock %}</title>
-    <!-- 後續可於此處引入 /static/css/style.css -->
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <header>
-        <nav>
-            <a href="{{ url_for('recipes.index') }}">首頁</a>
-            <!-- 稍後將依據 current_user.is_authenticated 顯示登入/註冊或個人主頁 -->
-        </nav>
-    </header>
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('recipes.index') }}">
+                <i class="fa-solid fa-utensils me-2"></i>食譜收藏夾
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="{{ url_for('recipes.index') }}">首頁</a>
+                    </li>
+                    <li class="nav-item ms-lg-3">
+                        <form class="d-flex" action="{{ url_for('search.search_keyword') }}" method="GET">
+                            <div class="input-group">
+                                <input class="form-control border-light shadow-sm" type="search" name="q" placeholder="尋找美味食譜..." aria-label="Search" style="border-radius:2rem 0 0 2rem;">
+                                <button class="btn btn-light shadow-sm text-primary border-light" type="submit" style="border-radius:0 2rem 2rem 0;"><i class="fa-solid fa-search"></i></button>
+                            </div>
+                        </form>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item me-2 d-flex align-items-center">
+                            <a class="btn btn-outline-primary btn-sm rounded-pill px-3" href="{{ url_for('recipes.create') }}"><i class="fa-solid fa-plus me-1"></i>開伙發布</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle fw-semibold" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fa-regular fa-circle-user me-1"></i>我的帳號
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
+                                <li><a class="dropdown-item py-2" href="{{ url_for('user.profile') }}"><i class="fa-solid fa-book-open me-2 text-muted"></i>個人主頁</a></li>
+                                <li><a class="dropdown-item py-2" href="{{ url_for('user.favorites_list') }}"><i class="fa-solid fa-heart me-2 text-danger"></i>我的收藏</a></li>
+                                {% if current_user.is_admin %}
+                                <li><a class="dropdown-item py-2 text-danger fw-bold" href="{{ url_for('admin.dashboard') }}"><i class="fa-solid fa-shield-halved me-2"></i>管理員後台</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form action="{{ url_for('auth.logout') }}" method="POST" class="m-0">
+                                        <button type="submit" class="dropdown-item py-2 text-secondary"><i class="fa-solid fa-right-from-bracket me-2"></i>登出</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link fw-semibold" href="{{ url_for('auth.login') }}">登入</a></li>
+                        <li class="nav-item d-flex align-items-center"><a class="btn btn-primary-custom btn-sm ms-2" href="{{ url_for('auth.register') }}">免費註冊</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
     
-    <main>
-        <!-- 顯示回饋訊息 (flash messages) -->
+    <div class="flash-messages">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                <ul>
                 {% for category, message in messages %}
-                    <li class="{{ category }}">{{ message }}</li>
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
                 {% endfor %}
-                </ul>
             {% endif %}
         {% endwith %}
-        
+    </div>
+
+    <main class="container py-5 animate-fade-in">
         {% block content %}{% endblock %}
     </main>
 
-    <footer>
-        <p>&copy; 2026 食譜收藏夾</p>
+    <footer class="py-4 mt-auto">
+        <div class="container text-center">
+            <p class="mb-0 text-muted">&copy; 2026 食譜收藏夾 MyRecipe. All rights reserved.</p>
+        </div>
     </footer>
-    <!-- 後續可於此處引入 js -->
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 4000);
+    </script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -1,4 +1,5 @@
 from datetime import datetime
+from sqlalchemy.exc import SQLAlchemyError
 from . import db
 
 recipe_ingredients = db.Table('recipe_ingredients',
@@ -31,28 +32,76 @@ class Recipe(db.Model):
 
     @staticmethod
     def create(**kwargs):
-        recipe = Recipe(**kwargs)
-        db.session.add(recipe)
-        db.session.commit()
-        return recipe
+        """
+        新增食譜記錄。
+        :param kwargs: 食譜對應欄位
+        :return: 成功回傳 Recipe，失敗回傳 None
+        """
+        try:
+            recipe = Recipe(**kwargs)
+            db.session.add(recipe)
+            db.session.commit()
+            return recipe
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            print(f"Error creating recipe: {e}")
+            return None
 
     @staticmethod
     def get_by_id(recipe_id):
-        return Recipe.query.get(recipe_id)
+        """
+        取得單筆食譜記錄。
+        :param recipe_id: 食譜 ID
+        :return: Recipe 物件或 None
+        """
+        try:
+            return Recipe.query.get(recipe_id)
+        except SQLAlchemyError as e:
+            print(f"Error getting recipe: {e}")
+            return None
 
     @staticmethod
     def get_all(public_only=True):
-        if public_only:
-            return Recipe.query.filter_by(is_public=True).all()
-        return Recipe.query.all()
+        """
+        取得所有食譜清單。
+        :param public_only: 預設 True，只回傳公開的食譜
+        :return: 食譜串列
+        """
+        try:
+            if public_only:
+                return Recipe.query.filter_by(is_public=True).all()
+            return Recipe.query.all()
+        except SQLAlchemyError as e:
+            print(f"Error getting recipes: {e}")
+            return []
 
     def update(self, **kwargs):
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-        self.updated_at = datetime.utcnow()
-        db.session.commit()
-        return self
+        """
+        更新食譜記錄。
+        :param kwargs: 更新的欄位值
+        :return: 成功回傳 Recipe，失敗 None
+        """
+        try:
+            for key, value in kwargs.items():
+                setattr(self, key, value)
+            self.updated_at = datetime.utcnow()
+            db.session.commit()
+            return self
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            print(f"Error updating recipe: {e}")
+            return None
 
     def delete(self):
-        db.session.delete(self)
-        db.session.commit()
+        """
+        刪除食譜。
+        :return: 成功 True，失敗 False
+        """
+        try:
+            db.session.delete(self)
+            db.session.commit()
+            return True
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            print(f"Error deleting recipe: {e}")
+            return False

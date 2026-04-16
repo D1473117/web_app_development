@@ -1,8 +1,51 @@
 {% extends 'base.html' %}
-
-{% block title %}全站食譜管理 - 食譜收藏夾{% endblock %}
+{% block title %}食譜清單 - 管理員後台{% endblock %}
 
 {% block content %}
-<h2>管理員後台：食譜列表</h2>
-<!-- 待實作列出所有食譜及審核/刪除的表格 -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold"><i class="fa-solid fa-utensils text-success me-2"></i>管理員 / 食譜總管</h3>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-arrow-left me-1"></i>回後台首頁</a>
+</div>
+
+<div class="glass-card overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4">ID</th>
+                    <th>食譜名稱</th>
+                    <th>作者</th>
+                    <th>建立時間</th>
+                    <th>公開狀態</th>
+                    <th class="text-end pe-4">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for recipe in recipes %}
+                <tr>
+                    <td class="ps-4">{{ recipe.id }}</td>
+                    <td class="fw-semibold">
+                        <a href="{{ url_for('recipes.detail', id=recipe.id) }}" class="text-decoration-none text-dark">{{ recipe.title }} <i class="fa-solid fa-arrow-up-right-from-square small ms-1 text-muted"></i></a>
+                    </td>
+                    <td>{{ recipe.author.email.split('@')[0] }}</td>
+                    <td>{{ recipe.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        {% if recipe.is_public %}
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success">公開</span>
+                        {% else %}
+                        <span class="badge bg-dark bg-opacity-10 text-dark border border-dark">私人</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-4">
+                        <a href="{{ url_for('recipes.edit', id=recipe.id) }}" class="btn btn-sm btn-outline-warning text-dark"><i class="fa-solid fa-pen"></i></a>
+                        <form action="{{ url_for('recipes.delete', id=recipe.id) }}" method="POST" class="d-inline" onsubmit="return confirm('確定要違規下架/刪除這份食譜嗎？');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}

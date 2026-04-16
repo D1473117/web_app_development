@@ -1,46 +1,54 @@
 from flask import Blueprint, render_template, redirect, url_for, flash
-# from app.models.user import User
+from flask_login import login_required, current_user
+from app.models.user import User
+from app.models.recipe import Recipe
+from app.models.comment import Comment
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
 
-# 需定義 @admin_required 裝飾器邏輯或在此 Blueprint 使用 before_request 限制
+@bp.before_request
+@login_required
+def admin_required():
+    if not current_user.is_admin:
+        flash('您沒有權限存取此頁面', 'danger')
+        return redirect(url_for('recipes.index'))
 
 @bp.route('/', methods=['GET'])
 def dashboard():
-    """
-    後台總覽頁。
-    GET: 顯示全站統計資料（食譜總數、用戶總數），渲染 templates/admin/dashboard.html。
-    """
-    pass
+    users_count = User.query.count()
+    recipes_count = Recipe.query.count()
+    return render_template('admin/dashboard.html', users_count=users_count, recipes_count=recipes_count)
 
 @bp.route('/users', methods=['GET'])
 def manage_users():
-    """
-    管理區 - 使用者列表。
-    GET: 渲染 templates/admin/users.html。
-    """
-    pass
+    users = User.query.all()
+    return render_template('admin/users.html', users=users)
 
 @bp.route('/users/<int:user_id>/delete', methods=['POST'])
 def delete_user(user_id):
-    """
-    刪除 / 停用使用者。
-    POST: 刪除資料後 redirect admin.manage_users。
-    """
-    pass
+    if user_id == current_user.id:
+        flash('不能刪除自己的帳號', 'danger')
+        return redirect(url_for('admin.manage_users'))
+        
+    user = User.query.get(user_id)
+    if user:
+        user.delete()
+        flash('使用者已被刪除', 'success')
+    return redirect(url_for('admin.manage_users'))
 
 @bp.route('/recipes', methods=['GET'])
 def manage_recipes():
-    """
-    管理區 - 食譜列表審核。
-    GET: 渲染 templates/admin/recipes.html。
-    """
-    pass
+    recipes = Recipe.query.all()
+    return render_template('admin/recipes.html', recipes=recipes)
 
 @bp.route('/comments/<int:comment_id>/delete', methods=['POST'])
 def delete_comment(comment_id):
-    """
-    刪除不當留言。
-    POST: 管理員強制移除單一留言，重導向回到該食譜詳情。
-    """
-    pass
+    comment = Comment.query.get(comment_id)
+    if not comment:
+        flash('找不到留言', 'danger')
+        return redirect(url_for('admin.dashboard'))
+        
+    recipe_id = comment.recipe_id
+    comment.delete()
+    flash('留言已被刪除', 'success')
+    return redirect(url_for('recipes.detail', id=recipe_id))

@@ -1,22 +1,19 @@
 from flask import Blueprint, render_template
-# from flask_login import login_required, current_user
+from flask_login import login_required, current_user
+from app.models.recipe import Recipe
+from app.models.favorite import Favorite
 
 bp = Blueprint('user', __name__, url_prefix='/user')
 
 @bp.route('/profile', methods=['GET'])
-# @login_required
+@login_required
 def profile():
-    """
-    個人主頁。
-    GET: 顯示自己建立的所有食譜、帳號數據。渲染 templates/user/profile.html。
-    """
-    pass
+    my_recipes = Recipe.query.filter_by(user_id=current_user.id).all()
+    return render_template('user/profile.html', recipes=my_recipes)
 
 @bp.route('/favorites', methods=['GET'])
-# @login_required
+@login_required
 def favorites_list():
-    """
-    個人的收藏清單。
-    GET: 列出所有已加入我的最愛的食譜。渲染 templates/user/favorites.html。
-    """
-    pass
+    favorites = Favorite.get_by_user(current_user.id)
+    recipes = [f.recipe for f in favorites if f.recipe]
+    return render_template('user/favorites.html', recipes=recipes)
