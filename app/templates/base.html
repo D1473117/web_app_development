@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}食譜收藏夾{% endblock %}</title>
+    <!-- 後續可於此處引入 /static/css/style.css -->
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="{{ url_for('recipes.index') }}">首頁</a>
+            <!-- 稍後將依據 current_user.is_authenticated 顯示登入/註冊或個人主頁 -->
+        </nav>
+    </header>
+    
+    <main>
+        <!-- 顯示回饋訊息 (flash messages) -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul>
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2026 食譜收藏夾</p>
+    </footer>
+    <!-- 後續可於此處引入 js -->
+</body>
+</html>
